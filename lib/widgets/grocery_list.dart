@@ -70,10 +70,22 @@ class _GroceryListState extends State<GroceryList> {
     });
   }
 
-  void _remoteItem(GroceryItem item) {
+  void _removeItem(GroceryItem item) async {
+    final index = _groceryItems.indexOf(item);
     setState(() {
       _groceryItems.remove(item);
     });
+
+    final url = Uri.https("flutter-prep-1661c-default-rtdb.firebaseio.com",
+        "shopping-list/${item.id}.json");
+
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      // Optional: show error message
+      setState(() {
+        _groceryItems.insert(index, item);
+      });
+    }
   }
 
   @override
@@ -92,7 +104,7 @@ class _GroceryListState extends State<GroceryList> {
         itemBuilder: (ctx, index) => Dismissible(
           key: ValueKey(_groceryItems[index].id),
           onDismissed: (direction) {
-            _remoteItem(_groceryItems[index]);
+            _removeItem(_groceryItems[index]);
           },
           child: ListTile(
             title: Text(_groceryItems[index].name),
